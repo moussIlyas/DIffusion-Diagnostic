@@ -1,0 +1,13 @@
+anomalib
+torch
+torchvision
+pytorch-fid
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+Pillow
+tqdm
+py7zr
+albumentations
