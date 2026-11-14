@@ -1,2 +1,2 @@
 categorie,seed,ablation,seuil,auroc_image,auroc_pixel,aupro
-bottle,42,synth_filtree,0.019272089,1.0,0.9856631755828857,0.9452453851699829
+bottle,42,synth_filtree,0.0184995235,1.0,0.9846715331077576,0.9434067010879517

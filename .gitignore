@@ -1,3 +1,5 @@
 data/
-synthetiques/
+/synthetiques/
 results/Patchcore/
+.cache/
+__pycache__/

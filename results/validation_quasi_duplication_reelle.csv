@@ -1,0 +1,4 @@
+categorie,n_reels,distance_mediane_reel_reel,taux_reels_sous_0.05,taux_reels_sous_0.10,taux_reels_sous_0.15
+bottle,63,0.015005826950073242,0.9365079365079365,1.0,1.0
+cable,92,0.039309561252593994,0.8804347826086957,1.0,1.0
+transistor,40,0.022414356470108032,0.875,1.0,1.0

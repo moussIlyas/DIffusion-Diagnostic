@@ -2,6 +2,10 @@ anomalib
 torch
 torchvision
 pytorch-fid
+diffusers
+transformers
+accelerate
+safetensors
 numpy
 pandas
 matplotlib
