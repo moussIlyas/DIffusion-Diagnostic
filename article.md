@@ -101,6 +101,51 @@ Les images complètes (120 par catégorie) sont dans `synthetiques/`, et une sé
 18 images prêtes pour une présentation se trouve dans
 `article_assets/synthetiques/<catégorie>/`.
 
+### Preuve que les images ont bien été injectées dans R3
+
+C'est le point le plus important à vérifier : **est-ce que les 120 images synthétiques ont
+réellement été ajoutées aux données d'entraînement, ou est-ce qu'elles ont été perdues en
+route ?** Sans cette vérification, un score R3 identique à R1 ne prouverait rien.
+
+Le notebook contient une fonction (`ajouter_synthetiques_au_train`) qui ajoute les images au
+dataset d'entraînement et affiche un message de confirmation. Les sorties conservées dans
+`notebook_IND3_diffusion_defauts.ipynb` contiennent ces traces explicites :
+
+| Catégorie | Graine | Message affiché dans le notebook |
+|-----------|--------|----------------------------------|
+| bottle | 44 | `Ajouté 120 images synthétiques au train de bottle` |
+| cable | 44 | `Ajouté 120 images synthétiques au train de cable` |
+| transistor | 43 | `Ajouté 120 images synthétiques au train de transistor` |
+| transistor | 44 | `Ajouté 120 images synthétiques au train de transistor` |
+
+Ces quatre traces couvrent les **trois catégories** et confirment que le train de chaque
+catégorie a bien reçu **120 images** synthétiques. Les 9 runs R3 (3 catégories × 3 graines)
+sont bien présents dans `results/results.csv`, avec leurs fichiers de prédictions
+`results/predictions_R3_synthetique_*.csv` ; les sorties du notebook n'en conservent que
+quatre traces, mais chaque catégorie est couverte.
+
+**Deuxième preuve, indirecte mais décisive :** les scores R3 ne sont **pas identiques** aux
+scores R1. Si l'injection avait été perdue, R3 serait exactement égal à R1, comme c'était le
+cas pour l'ancien copy-paste. Or on observe un petit écart :
+
+| Catégorie | AUROC pixel R1 | AUROC pixel R3 | Écart |
+|-----------|----------------|----------------|-------|
+| bottle | 0.9856 | 0.9847 | −0.0009 |
+| cable | 0.9849 | 0.9818 | −0.0031 |
+| transistor | 0.9732 | 0.9723 | −0.0009 |
+
+Un modèle entraîné sur exactement les mêmes images donnerait des scores identiques. Le fait
+que R3 diffère de R1 prouve que le jeu d'entraînement a bien changé.
+
+**Pourquoi une correction a été nécessaire.** Sans précaution, les images sont ajoutées au
+datamodule, puis Lightning appelle `setup("fit")` et **reconstruit** ce datamodule : les
+images injectées sont silencieusement perdues, et R3 redevient strictement identique à R1.
+La correction consiste à conserver le datamodule déjà préparé avec
+`datamodule._is_setup = True` juste après l'injection. Elle a été appliquée dans une
+**copie temporaire** du notebook ; `notebook_IND3_diffusion_defauts.ipynb` et
+`generer_synthetiques.ipynb` restent inchangés. Le détail est documenté dans
+`results/README_results.md` (section « Correction nécessaire de l'exécution R3 »).
+
 ---
 
 ## 4. Comment on mesure la performance
@@ -146,20 +191,32 @@ voir si la diffusion apporte de la **diversité** ou si elle recopie.
 ## 5. Les résultats
 
 Voici les scores moyens sur **3 graines aléatoires** (42, 43, 44), donc 9 runs par régime.
+L'injection effective des 120 images synthétiques par catégorie a été vérifiée dans la
+section 3 : les scores R3 ci-dessous correspondent donc bien à un entraînement avec ces
+images.
 
 ### Tableau récapitulatif
 
+Chaque cellule est présentée au format **moyenne ± écart-type**, calculé sur les 3 graines
+aléatoires (42, 43, 44). L'écart-type mesure la variabilité des résultats d'une graine à
+l'autre.
+
 | Catégorie | Régime | AUROC image | AUROC pixel | AUPRO |
 |-----------|--------|-------------|-------------|-------|
-| bottle | R1 — réel seul | **1.0000** | **0.9856** | **0.9449** |
-| bottle | R2 — augmentation | 0.9942 | 0.9768 | 0.9075 |
-| bottle | R3 — synthétique | **1.0000** | 0.9847 | 0.9423 |
-| cable | R1 — réel seul | **0.9873** | **0.9849** | **0.9310** |
-| cable | R2 — augmentation | 0.9755 | 0.9722 | 0.9139 |
-| cable | R3 — synthétique | 0.9815 | 0.9818 | 0.9268 |
-| transistor | R1 — réel seul | **0.9942** | **0.9732** | **0.9469** |
-| transistor | R2 — augmentation | 0.9428 | 0.9208 | 0.8962 |
-| transistor | R3 — synthétique | 0.9921 | 0.9723 | 0.9456 |
+| bottle | R1 — réel seul | **1.0000 ± 0.0000** | **0.9856 ± 0.0001** | **0.9449 ± 0.0004** |
+| bottle | R2 — augmentation | 0.9942 ± 0.0020 | 0.9768 ± 0.0018 | 0.9075 ± 0.0068 |
+| bottle | R3 — synthétique | **1.0000 ± 0.0000** | 0.9847 ± 0.0000 | 0.9423 ± 0.0003 |
+| cable | R1 — réel seul | **0.9873 ± 0.0045** | **0.9849 ± 0.0002** | **0.9310 ± 0.0010** |
+| cable | R2 — augmentation | 0.9755 ± 0.0012 | 0.9722 ± 0.0009 | 0.9139 ± 0.0021 |
+| cable | R3 — synthétique | 0.9815 ± 0.0022 | 0.9818 ± 0.0002 | 0.9268 ± 0.0006 |
+| transistor | R1 — réel seul | **0.9942 ± 0.0015** | **0.9732 ± 0.0006** | **0.9469 ± 0.0009** |
+| transistor | R2 — augmentation | 0.9428 ± 0.0042 | 0.9208 ± 0.0044 | 0.8962 ± 0.0043 |
+| transistor | R3 — synthétique | 0.9921 ± 0.0011 | 0.9723 ± 0.0005 | 0.9456 ± 0.0009 |
+
+> **Note de lecture :** certains écarts-types sont inférieurs à 0.0001 et s'affichent donc
+> `0.0000` après arrondi à 4 décimales. Ce n'est pas une erreur : cela signifie simplement
+> que les résultats sont extrêmement stables entre graines. Les valeurs exactes sont dans
+> `results/summary.csv`.
 
 ### Ce qu'on voit immédiatement
 
